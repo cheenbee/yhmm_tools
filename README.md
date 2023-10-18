@@ -1,6 +1,9 @@
 # yhmm
 
-A new Flutter project.
+{
+  "flutterSdkVersion": "3.7.5",
+  "flavors": {}
+}
 
 ## Getting Started
 
