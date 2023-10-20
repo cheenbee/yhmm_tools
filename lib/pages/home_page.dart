@@ -72,7 +72,7 @@ class _HomePageState extends State<HomePage> {
                   ),
                 ),
               ),
-              Text(provider.orderRemarkCountText),
+              Text(context.select((value) => provider.orderRemarkCountText)),
             ],
           ),
         ),

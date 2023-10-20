@@ -16,28 +16,20 @@ class HomeProvider extends ChangeNotifier {
     // print(response);
   }
 
-  String get orderRemarkCountText {
-    var str = '';
-    for (var key in currentNumMap.keys.toList()..sort()) {
-      int numCount = currentNumMap[key] ?? 1;
-      if (numCount > 1) {
-        str += '$key：$numCount\n';
-      }
-    }
-    return str;
-  }
+  String orderRemarkCountText = '';
 
   handleOrderExcel() async {
     // var file = 'assets/data/orders.xlsx';
 
     try {
-      Utils.showToast(msg: '正在处理...');
       var result = await FilePicker.platform.pickFiles(
         type: FileType.custom,
         allowedExtensions: ['xlsx'],
         allowMultiple: false,
       );
       if (result == null) return;
+
+      Utils.showToast(msg: '正在处理...');
 
       Uint8List? fileBytes = result.files.first.bytes;
       // String fileName = result.files.first.name;
@@ -62,14 +54,15 @@ class HomeProvider extends ChangeNotifier {
               .cell(CellIndex.indexByColumnRow(columnIndex: 2, rowIndex: row));
 
           // col去重
-          if (row > 1) {
+          if (row > 0 && cellC.value != null) {
             var cellAPre = sheet.cell(
                 CellIndex.indexByColumnRow(columnIndex: 0, rowIndex: row - 1));
             var cellCPre = sheet.cell(
                 CellIndex.indexByColumnRow(columnIndex: 2, rowIndex: row - 1));
             // 买家昵称和备注都相同，去重
             if (cellCPre.value == cellC.value &&
-                cellAPre.value == cellA.value) {
+                cellAPre.value == cellA.value &&
+                cellA.value.toString().length > 4) {
               continue;
             }
           }
@@ -82,7 +75,8 @@ class HomeProvider extends ChangeNotifier {
           // 正则查找 卖家备注
           var matchStringListB = _findThreeNumber(cellB.value.toString());
           // 去除cellB中和cellA中相同的元素
-          for (var bNumValue in matchStringListB) {
+          var tempBList = List.from(matchStringListB);
+          for (var bNumValue in tempBList) {
             if (matchStringListA.contains(bNumValue)) {
               matchStringListB.remove(bNumValue);
             }
@@ -90,6 +84,16 @@ class HomeProvider extends ChangeNotifier {
           // 添加卖家备注匹配成功的数字到字典中
           _addMatchNum2Map(matchStringListB);
         }
+
+        var str = '';
+        for (var key in currentNumMap.keys.toList()..sort()) {
+          int numCount = currentNumMap[key] ?? 1;
+          if (numCount > 1) {
+            str += '$key：$numCount\n';
+          }
+        }
+        orderRemarkCountText = str;
+
         notifyListeners();
         await _copyCount2ClipBoard();
         Utils.showToast(msg: '统计结果已复制到粘贴板');
